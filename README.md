@@ -153,5 +153,3 @@ Tracks progress so you can **resume labeling from where you left off**.
 This project is **open-source** under the **MIT License**.
 
 ---
-
-Now you're all set! 🎉 Let me know if you'd like any modifications or additional sections. 🚀
