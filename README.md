@@ -1,5 +1,3 @@
-Here is a **detailed README** for your **Jersey Image Annotator Tool**. It includes **installation instructions, usage guide, features, keyboard shortcuts, and troubleshooting tips**. 🚀  
-
 ---
 
 # **Jersey Image Annotator Tool**  
