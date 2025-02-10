@@ -144,7 +144,7 @@ Tracks progress so you can **resume labeling from where you left off**.
 ---
 
 ## **👨‍💻 Author & Contributions**
-- **Created by:** *Your Name / Team Name*  
+- **Created by:** *Fawwaz Bin Tasneem*  
 - **Contributions:** Open a pull request on GitHub!  
 
 ---
