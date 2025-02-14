@@ -44,6 +44,12 @@ class ImageAnnotator(QWidget):
         self.image_label = QLabel("No Image Loaded")
         self.image_label.setFixedSize(500, 500)
         self.image_label.setStyleSheet("border: 2px solid #7289DA; padding: 5px;")
+        
+        # New: Image name display label
+        self.image_name_label = QLabel("No Image Loaded")
+        self.image_name_label.setFont(QFont("Arial", 16))
+        self.image_name_label.setAlignment(Qt.AlignCenter)
+        self.image_name_label.setStyleSheet("padding: 5px;")
 
         # Number display
         self.number_display = QLabel("Enter Number")
@@ -84,6 +90,7 @@ class ImageAnnotator(QWidget):
         btn_layout.addWidget(self.next_btn)
 
         layout.addWidget(self.image_label, alignment=Qt.AlignCenter)
+        layout.addWidget(self.image_name_label, alignment=Qt.AlignCenter)  # Display image name
         layout.addWidget(self.number_display, alignment=Qt.AlignCenter)
         layout.addWidget(self.load_folder_btn, alignment=Qt.AlignCenter)
         layout.addWidget(self.select_output_btn, alignment=Qt.AlignCenter)
@@ -134,6 +141,11 @@ class ImageAnnotator(QWidget):
         if image_path:
             pixmap = QPixmap(image_path)
             self.image_label.setPixmap(pixmap.scaled(500, 500, Qt.KeepAspectRatio))
+            # Update the image name display label
+            self.image_name_label.setText(os.path.basename(image_path))
+        else:
+            self.image_label.setText("No Image Loaded")
+            self.image_name_label.setText("No Image Loaded")
 
     def save_annotation(self):
         """
@@ -164,7 +176,7 @@ class ImageAnnotator(QWidget):
 
         self.label_text = ""
         self.show_next_image()
-        
+
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Left:
