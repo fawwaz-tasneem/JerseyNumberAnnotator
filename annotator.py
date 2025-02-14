@@ -8,11 +8,13 @@ try:
     from PyQt5.QtWidgets import (QApplication, QLabel, QPushButton, QFileDialog,
                                  QVBoxLayout, QHBoxLayout, QWidget, QProgressBar,
                                  QFrame, QCheckBox, QSizePolicy, QGridLayout)
-    from PyQt5.QtGui import QPixmap, QFont
+    from PyQt5.QtGui import QPixmap, QFont, QIcon
     from PyQt5.QtCore import Qt
 except ModuleNotFoundError:
     print("Error: PyQt5 is not installed. Please install it using 'pip install PyQt5'")
     sys.exit(1)
+
+
 
 from image_loader import ImageLoader
 from csv_handler import CSVHandler
@@ -43,6 +45,7 @@ class ImageAnnotator(QWidget):
 
     def initUI(self):
         """Sets up the GUI layout and widgets."""
+        self.setWindowIcon(QIcon("assets/appIcon.png"))
         self.setWindowTitle("Football Jersey Number Annotator")
         self.resize(1200, 800)
         self.setStyleSheet("background-color: #2C2F33; color: #FFFFFF;")
@@ -119,8 +122,8 @@ class ImageAnnotator(QWidget):
         button_layout.addWidget(self.rename_btn, 1, 0)
         button_layout.addWidget(self.label_btn, 1, 1)
         button_layout.addWidget(sep2, 1, 2)
-        button_layout.addWidget(self.save_session_btn, 1, 3)
-        button_layout.addWidget(self.resume_session_btn, 1, 4)
+        button_layout.addWidget(self.resume_session_btn, 1, 3)
+        button_layout.addWidget(self.save_session_btn, 1, 4)
 
         # Row 2: Augmentation toggle spanning all columns
         button_layout.addWidget(self.augment_mode_toggle, 2, 0, 1, 5, alignment=Qt.AlignCenter)
@@ -220,14 +223,17 @@ class ImageAnnotator(QWidget):
     def select_output_folder(self):
         """
         Opens a file dialog for selecting the output folder.
-        Also initializes the session manager.
+        Also initializes the session manager and sets the session number.
         """
         folder = QFileDialog.getExistingDirectory(self, "Select Output Folder")
         if folder:
             self.output_folder = folder
             print(f"Output folder set to: {self.output_folder}")
             self.session_manager = SessionManager(os.path.join(self.output_folder, "session_history.json"))
+            # Set the session number based on history
+            self.session_data["session_no"] = self.session_manager.get_session_count() + 1
             self.update_session_stats()
+
 
     def rename_images(self):
         """Opens a dialog for renaming input images and refreshes the image list."""
@@ -295,7 +301,8 @@ class ImageAnnotator(QWidget):
         Suitable images (label not "unsuitable") increment the counter:
           - If augmentation is off, increment by 1.
           - If augmentation is on, increment by 10.
-        Updates session statistics accordingly.
+        Also stores the name of the last annotated input image in the session data.
+        Updates session statistics and progress accordingly.
         """
         label = self.label_text.strip()
         if label == "--":
@@ -308,8 +315,14 @@ class ImageAnnotator(QWidget):
             print("Error: No image loaded.")
             return
         print(f"Saving annotation for {image_path} in {self.output_folder}")
-        self.csv_handler.save_annotation(image_path, label, self.output_folder, self.session_data["session_id"])
+        # Pass session_no to CSVHandler as well.
+        self.csv_handler.save_annotation(image_path, label, self.output_folder, 
+                                         self.session_data["session_id"],
+                                         self.session_data.get("session_no", 1))
         self.session_data["images_annotated"] += 1
+        # Store the last annotated image name in session data.
+        self.session_data["last_annotated_image"] = os.path.basename(image_path)
+        # Count as suitable only if label is not "unsuitable"
         if label.lower() != "unsuitable":
             if self.augmented_mode:
                 self.session_data["suitable_images"] += 10
@@ -321,10 +334,30 @@ class ImageAnnotator(QWidget):
             print("Augmented mode is ON: Saving augmented images")
             aug_images = self.augmentor.augment_image(image_path, self.output_folder, True)
             for img in aug_images:
-                self.csv_handler.save_annotation(img, label, self.output_folder, self.session_data["session_id"])
+                self.csv_handler.save_annotation(img, label, self.output_folder, 
+                                                 self.session_data["session_id"],
+                                                 self.session_data.get("session_no", 1))
         self.label_text = ""
         self.show_next_image()
         self.update_session_stats()
+
+
+    def update_session_stats(self):
+        """Updates the session statistics display and progress bar."""
+        # Format session number as 3-digit
+        session_no = self.session_data.get("session_no", 1)
+        session_no_str = f"{session_no:03d}"
+        current = self.session_data.get("images_annotated", 0)
+        suitable = self.session_data.get("suitable_images", 0)
+        total_prev = self.session_manager.get_total_suitable() if self.session_manager else 0
+        self.session_stats_label.setText(
+            f"Session #{session_no_str} | Labeled this session: {current} | Total suitable: {total_prev + suitable}"
+        )
+        # Update progress bar: progress = (current images annotated / total images) * 100
+        total_images = len(self.image_loader.image_list) if self.image_loader.image_list else 0
+        progress_percent = int((current / total_images) * 100) if total_images > 0 else 0
+        self.progress.setValue(progress_percent)
+        self.progress.setFormat(f"{progress_percent}%")
 
     def keyPressEvent(self, event):
         key = event.key()
