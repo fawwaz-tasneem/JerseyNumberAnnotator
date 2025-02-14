@@ -5,7 +5,9 @@ import time
 
 # Attempt to import PyQt5, exit if not installed
 try:
-    from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QFileDialog, QVBoxLayout, QHBoxLayout, QWidget, QProgressBar, QFrame, QCheckBox
+    from PyQt5.QtWidgets import (QApplication, QLabel, QPushButton, QFileDialog,
+                                 QVBoxLayout, QHBoxLayout, QWidget, QProgressBar,
+                                 QFrame, QCheckBox)
     from PyQt5.QtGui import QPixmap, QFont
     from PyQt5.QtCore import Qt
 except ModuleNotFoundError:
@@ -15,11 +17,13 @@ except ModuleNotFoundError:
 from image_loader import ImageLoader
 from csv_handler import CSVHandler
 from augmentor import Augmentor
+from rename_dialog import RenameDialog  # New dialog for renaming images
 
 class ImageAnnotator(QWidget):
     def __init__(self):
         """Initializes the Image Annotator GUI."""
         super().__init__()
+        self.input_folder = ""  # Will store the input images folder
         self.initUI()
         self.image_loader = ImageLoader()
         self.csv_handler = CSVHandler()
@@ -67,8 +71,10 @@ class ImageAnnotator(QWidget):
         self.select_output_btn = QPushButton("📁 Select Output Folder")
         self.label_btn = QPushButton("✔ Label (Enter)")
         self.save_session_btn = QPushButton("💾 Save Session")
+        self.rename_btn = QPushButton("🔄 Rename Images")  # New button for renaming
 
-        for btn in [self.prev_btn, self.next_btn, self.load_folder_btn, self.select_output_btn, self.label_btn, self.save_session_btn]:
+        for btn in [self.prev_btn, self.next_btn, self.load_folder_btn, self.select_output_btn, 
+                    self.label_btn, self.save_session_btn, self.rename_btn]:
             btn.setStyleSheet(button_style)
 
         self.progress = QProgressBar()
@@ -82,6 +88,7 @@ class ImageAnnotator(QWidget):
         self.select_output_btn.clicked.connect(self.select_output_folder)
         self.label_btn.clicked.connect(self.save_annotation)
         self.save_session_btn.clicked.connect(self.save_session)
+        self.rename_btn.clicked.connect(self.rename_images)  # Connect new button
         self.augment_mode_toggle.stateChanged.connect(self.toggle_augmentation)
 
         # Layout
@@ -95,6 +102,7 @@ class ImageAnnotator(QWidget):
         layout.addWidget(self.number_display, alignment=Qt.AlignCenter)
         layout.addWidget(self.load_folder_btn, alignment=Qt.AlignCenter)
         layout.addWidget(self.select_output_btn, alignment=Qt.AlignCenter)
+        layout.addWidget(self.rename_btn, alignment=Qt.AlignCenter)  # Place rename button in the UI
         layout.addWidget(self.label_btn, alignment=Qt.AlignCenter)
         layout.addWidget(self.augment_mode_toggle, alignment=Qt.AlignCenter)
         layout.addWidget(self.save_session_btn, alignment=Qt.AlignCenter)
@@ -109,13 +117,24 @@ class ImageAnnotator(QWidget):
     def save_session(self):
         self.session_data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S")
         session_file = os.path.join(self.output_folder, "session_data.json")
+        # Append new session data to existing history
+        if os.path.exists(session_file):
+            with open(session_file, "r") as file:
+                try:
+                    history = json.load(file)
+                except json.JSONDecodeError:
+                    history = []
+        else:
+            history = []
+        history.append(self.session_data)
         with open(session_file, "w") as file:
-            json.dump(self.session_data, file, indent=4)
+            json.dump(history, file, indent=4)
         print("Session saved.")
 
     def load_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Image Folder")
         if folder:
+            self.input_folder = folder  # Store input folder
             self.image_loader.load_images(folder, self.output_folder, self)
             self.show_image()
 
@@ -128,6 +147,48 @@ class ImageAnnotator(QWidget):
         if folder:
             self.output_folder = folder
             print(f"Output folder set to: {self.output_folder}")
+
+    def rename_images(self):
+        """
+        Opens a dialog for renaming input images.
+        After renaming, refreshes the image list.
+        """
+        if not self.input_folder:
+            print("Error: Input folder not set.")
+            return
+
+        from rename_dialog import RenameDialog  # Import here to avoid circular dependency issues
+        dialog = RenameDialog(self.input_folder, self)
+        if dialog.exec_() == dialog.Accepted:
+            prefix, start_number = dialog.getValues()
+            if not prefix or not start_number.isdigit():
+                print("Error: Invalid prefix or starting number.")
+                return
+            start_number = int(start_number)
+            self.perform_rename(self.input_folder, prefix, start_number)
+            # Refresh image list after renaming
+            self.image_loader.load_images(self.input_folder, self.output_folder, self)
+            self.show_image()
+
+    def perform_rename(self, folder, prefix, start_number):
+        """
+        Renames all images in the specified folder using the given prefix and starting number.
+        The new name will be: prefix_XXXXXX.ext (with a 6-digit number).
+        """
+        images = sorted([f for f in os.listdir(folder) 
+                         if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+        number = start_number
+        for old_name in images:
+            ext = os.path.splitext(old_name)[1].lower()
+            new_name = f"{prefix}_{str(number).zfill(6)}{ext}"
+            old_path = os.path.join(folder, old_name)
+            new_path = os.path.join(folder, new_name)
+            try:
+                os.rename(old_path, new_path)
+                print(f"Renamed {old_name} to {new_name}")
+            except Exception as e:
+                print(f"Error renaming {old_name}: {e}")
+            number += 1
 
     def show_prev_image(self):
         self.image_loader.prev_image()
@@ -142,12 +203,10 @@ class ImageAnnotator(QWidget):
         if image_path:
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
-                # Scale image to fit within 500x500 while preserving aspect ratio
                 scaled_pixmap = pixmap.scaled(500, 500, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 self.image_label.setPixmap(scaled_pixmap)
             else:
                 self.image_label.setText("Failed to load image")
-            # Update the image name display label
             self.image_name_label.setText(os.path.basename(image_path))
         else:
             self.image_label.setText("No Image Loaded")
