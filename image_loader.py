@@ -10,53 +10,38 @@ class ImageLoader:
 
     def load_images(self, folder, output_folder, parent_widget):
         """
-        Loads images from a directory and resumes from last unannotated image.
-        If a previous session exists, alerts the user via a dialog box.
+        Loads images from a directory and resumes from the first unlabeled image.
+        If previous annotations exist, notifies the user.
         """
-        self.image_list = sorted([os.path.join(folder, img) 
-                                  for img in os.listdir(folder) 
+        self.image_list = sorted([os.path.join(folder, img)
+                                  for img in os.listdir(folder)
                                   if img.lower().endswith(('.png', '.jpg', '.jpeg'))])
-
-        # Load previous annotations
         csv_handler = CSVHandler()
         self.annotations = csv_handler.load_existing_annotations(output_folder)
-
-        last_unannotated_index = self.find_resume_index()
-        
-        # Notify user if previous session exists
-        if last_unannotated_index > 0:
+        self.index = self.find_resume_index()
+        if self.index > 0:
             QMessageBox.information(parent_widget, "Previous Session Found",
-                                    f"Resuming from image {last_unannotated_index + 1} of {len(self.image_list)}.")
-
-        self.index = last_unannotated_index  # Start from the first unannotated image
+                                    f"Resuming from image {self.index + 1} of {len(self.image_list)}.")
 
     def find_resume_index(self):
-        """
-        Finds the first unannotated image index to resume from.
-        """
+        """Finds the first unannotated image index."""
         for i, image_path in enumerate(self.image_list):
             if os.path.basename(image_path) not in self.annotations:
                 return i
-        return len(self.image_list)  # All images annotated
+        return len(self.image_list)
 
     def get_current_image(self):
-        """
-        Returns the current image path.
-        """
+        """Returns the current image path."""
         if self.image_list and self.index < len(self.image_list):
             return self.image_list[self.index]
         return None
 
     def next_image(self):
-        """
-        Moves to the next image.
-        """
+        """Advances to the next image."""
         if self.index < len(self.image_list) - 1:
             self.index += 1
 
     def prev_image(self):
-        """
-        Moves to the previous image.
-        """
+        """Goes back to the previous image."""
         if self.index > 0:
             self.index -= 1

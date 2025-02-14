@@ -7,7 +7,7 @@ import time
 try:
     from PyQt5.QtWidgets import (QApplication, QLabel, QPushButton, QFileDialog,
                                  QVBoxLayout, QHBoxLayout, QWidget, QProgressBar,
-                                 QFrame, QCheckBox)
+                                 QFrame, QCheckBox, QSizePolicy, QGridLayout)
     from PyQt5.QtGui import QPixmap, QFont
     from PyQt5.QtCore import Qt
 except ModuleNotFoundError:
@@ -25,7 +25,7 @@ class ImageAnnotator(QWidget):
         """Initializes the Image Annotator GUI."""
         super().__init__()
         self.input_folder = ""  # Stores the input images folder
-        self.session_manager = None  # Will be initialized when output folder is selected
+        self.session_manager = None  # Will be initialized when output folder is set
         # Initialize current session data
         self.session_data = {
             "session_id": time.strftime("%Y%m%d_%H%M%S"),
@@ -44,12 +44,13 @@ class ImageAnnotator(QWidget):
     def initUI(self):
         """Sets up the GUI layout and widgets."""
         self.setWindowTitle("Football Jersey Number Annotator")
-        self.setGeometry(200, 100, 1000, 750)
+        self.resize(1200, 800)
         self.setStyleSheet("background-color: #2C2F33; color: #FFFFFF;")
 
-        # Image display area (fixed 500x500)
+        # Image display area (default 500x500, minimum 100x100, resizable)
         self.image_label = QLabel("No Image Loaded")
-        self.image_label.setFixedSize(500, 500)
+        self.image_label.setMinimumSize(100, 100)
+        self.image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.image_label.setAlignment(Qt.AlignCenter)
         self.image_label.setStyleSheet("border: 2px solid #7289DA; padding: 5px;")
 
@@ -59,7 +60,7 @@ class ImageAnnotator(QWidget):
         self.image_name_label.setAlignment(Qt.AlignCenter)
         self.image_name_label.setStyleSheet("padding: 5px;")
 
-        # Number display
+        # Number display (fixed for consistency)
         self.number_display = QLabel("Enter Number")
         self.number_display.setFont(QFont("Arial", 40, QFont.Bold))
         self.number_display.setAlignment(Qt.AlignCenter)
@@ -72,7 +73,7 @@ class ImageAnnotator(QWidget):
         self.session_stats_label.setAlignment(Qt.AlignCenter)
         self.session_stats_label.setStyleSheet("padding: 5px;")
 
-        # Buttons
+        # Buttons – using a grid layout for equal spacing and vertical separators
         button_style = "padding: 10px; font-size: 14px; border-radius: 5px; background-color: #7289DA; color: white;"
         self.prev_btn = QPushButton("← Previous")
         self.next_btn = QPushButton("Next →")
@@ -81,15 +82,58 @@ class ImageAnnotator(QWidget):
         self.rename_btn = QPushButton("🔄 Rename Images")
         self.label_btn = QPushButton("✔ Label (Enter)")
         self.save_session_btn = QPushButton("💾 Save Session")
-        self.resume_session_btn = QPushButton("⟳ Resume Session")  # Button to resume previous session
+        self.resume_session_btn = QPushButton("⟳ Resume Session")
 
         for btn in [self.prev_btn, self.next_btn, self.load_folder_btn, self.select_output_btn,
                     self.rename_btn, self.label_btn, self.save_session_btn, self.resume_session_btn]:
             btn.setStyleSheet(button_style)
+            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         self.augment_mode_toggle = QCheckBox("Enable Augmentation")
         self.augment_mode_toggle.setStyleSheet("font-size: 16px;")
+        self.augment_mode_toggle.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.progress = QProgressBar()
+
+        # Arrange buttons using grid layout with vertical separators
+        button_layout = QGridLayout()
+        button_layout.setSpacing(10)
+        for col in range(5):
+            button_layout.setColumnStretch(col, 1)
+
+        # Vertical separators
+        sep1 = QFrame()
+        sep1.setFrameShape(QFrame.VLine)
+        sep1.setFrameShadow(QFrame.Sunken)
+        sep2 = QFrame()
+        sep2.setFrameShape(QFrame.VLine)
+        sep2.setFrameShadow(QFrame.Sunken)
+
+        # Row 0: Prev, Next, separator, Load Folder, Select Output Folder
+        button_layout.addWidget(self.prev_btn, 0, 0)
+        button_layout.addWidget(self.next_btn, 0, 1)
+        button_layout.addWidget(sep1, 0, 2)
+        button_layout.addWidget(self.load_folder_btn, 0, 3)
+        button_layout.addWidget(self.select_output_btn, 0, 4)
+
+        # Row 1: Rename Images, Label, separator, Save Session, Resume Session
+        button_layout.addWidget(self.rename_btn, 1, 0)
+        button_layout.addWidget(self.label_btn, 1, 1)
+        button_layout.addWidget(sep2, 1, 2)
+        button_layout.addWidget(self.save_session_btn, 1, 3)
+        button_layout.addWidget(self.resume_session_btn, 1, 4)
+
+        # Row 2: Augmentation toggle spanning all columns
+        button_layout.addWidget(self.augment_mode_toggle, 2, 0, 1, 5, alignment=Qt.AlignCenter)
+
+        # Main layout
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.image_label)
+        main_layout.addWidget(self.image_name_label)
+        main_layout.addWidget(self.number_display, alignment=Qt.AlignCenter)
+        main_layout.addWidget(self.session_stats_label, alignment=Qt.AlignCenter)
+        main_layout.addLayout(button_layout)
+        main_layout.addWidget(self.progress)
+        self.setLayout(main_layout)
 
         # Button connections
         self.prev_btn.clicked.connect(self.show_prev_image)
@@ -102,34 +146,16 @@ class ImageAnnotator(QWidget):
         self.resume_session_btn.clicked.connect(self.resume_session)
         self.augment_mode_toggle.stateChanged.connect(self.toggle_augmentation)
 
-        # Layout
-        layout = QVBoxLayout()
-        btn_layout = QHBoxLayout()
-        btn_layout.addWidget(self.prev_btn)
-        btn_layout.addWidget(self.next_btn)
-
-        layout.addWidget(self.image_label, alignment=Qt.AlignCenter)
-        layout.addWidget(self.image_name_label, alignment=Qt.AlignCenter)
-        layout.addWidget(self.number_display, alignment=Qt.AlignCenter)
-        layout.addWidget(self.session_stats_label, alignment=Qt.AlignCenter)
-        layout.addWidget(self.load_folder_btn, alignment=Qt.AlignCenter)
-        layout.addWidget(self.select_output_btn, alignment=Qt.AlignCenter)
-        layout.addWidget(self.rename_btn, alignment=Qt.AlignCenter)
-        layout.addWidget(self.label_btn, alignment=Qt.AlignCenter)
-        layout.addWidget(self.augment_mode_toggle, alignment=Qt.AlignCenter)
-        layout.addWidget(self.save_session_btn, alignment=Qt.AlignCenter)
-        layout.addWidget(self.resume_session_btn, alignment=Qt.AlignCenter)
-        layout.addLayout(btn_layout)
-        layout.addWidget(self.progress)
-
-        self.setLayout(layout)
+    def resizeEvent(self, event):
+        """Override to rescale the displayed image when the window is resized."""
+        self.show_image()
+        super().resizeEvent(event)
 
     def toggle_augmentation(self, state):
         self.augmented_mode = state == Qt.Checked
 
     def update_session_stats(self):
         """Updates the session statistics display."""
-        # Format session number as 3-digit
         session_no = self.session_manager.get_session_count() + 1 if self.session_manager else 1
         session_no_str = f"{session_no:03d}"
         current = self.session_data.get("images_annotated", 0)
@@ -151,20 +177,19 @@ class ImageAnnotator(QWidget):
         else:
             print("Session manager not initialized.")
         self.update_session_stats()
-        self.close()  # Close the application after saving
+        self.close()
 
     def resume_session(self):
         """
         Resumes labeling from the last unlabeled image based on the CSV file.
-        Initializes a new session with total suitable images set from previous sessions.
+        Initializes a new session with previous total suitable images carried over.
         """
         if not self.session_manager:
             print("Session manager not initialized.")
             return
         if self.session_manager.sessions:
             prev_total = self.session_manager.get_total_suitable()
-            print(f"Resuming session. Total suitable images from previous sessions: {prev_total}")
-            # Start a new session with previous suitable total in mind (current session counter starts at 0)
+            print(f"Resuming session. Previous total suitable images: {prev_total}")
             self.session_data = {
                 "session_id": time.strftime("%Y%m%d_%H%M%S"),
                 "start_time": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -209,7 +234,6 @@ class ImageAnnotator(QWidget):
         if not self.input_folder:
             print("Error: Input folder not set.")
             return
-
         from rename_dialog import RenameDialog
         dialog = RenameDialog(self.input_folder, self)
         if dialog.exec_() == dialog.Accepted:
@@ -219,7 +243,6 @@ class ImageAnnotator(QWidget):
                 return
             start_number = int(start_number)
             self.perform_rename(self.input_folder, prefix, start_number)
-            # Refresh image list after renaming
             self.image_loader.load_images(self.input_folder, self.output_folder, self)
             self.show_image()
 
@@ -228,8 +251,7 @@ class ImageAnnotator(QWidget):
         Renames all images in the specified folder using the given prefix and starting number.
         New names will follow the format: prefix_XXXXXX.ext (6-digit number).
         """
-        images = sorted([f for f in os.listdir(folder) 
-                         if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+        images = sorted([f for f in os.listdir(folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
         number = start_number
         for old_name in images:
             ext = os.path.splitext(old_name)[1].lower()
@@ -256,7 +278,8 @@ class ImageAnnotator(QWidget):
         if image_path:
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
-                scaled_pixmap = pixmap.scaled(500, 500, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                # Scale the pixmap to the current size of the image_label widget
+                scaled_pixmap = pixmap.scaled(self.image_label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 self.image_label.setPixmap(scaled_pixmap)
             else:
                 self.image_label.setText("Failed to load image")
@@ -280,17 +303,13 @@ class ImageAnnotator(QWidget):
         if not label or not self.output_folder:
             print("Error: No label entered or output folder not set.")
             return
-
         image_path = self.image_loader.get_current_image()
         if not image_path:
             print("Error: No image loaded.")
             return
-
         print(f"Saving annotation for {image_path} in {self.output_folder}")
         self.csv_handler.save_annotation(image_path, label, self.output_folder, self.session_data["session_id"])
         self.session_data["images_annotated"] += 1
-
-        # Count suitable images if label is not "unsuitable"
         if label.lower() != "unsuitable":
             if self.augmented_mode:
                 self.session_data["suitable_images"] += 10
@@ -298,8 +317,6 @@ class ImageAnnotator(QWidget):
                 self.session_data["suitable_images"] += 1
         else:
             print("Image marked as unsuitable. No augmentation performed.")
-
-        # Process augmented images only for suitable images when augmentation is enabled.
         if label.lower() != "unsuitable" and self.augmented_mode:
             print("Augmented mode is ON: Saving augmented images")
             aug_images = self.augmentor.augment_image(image_path, self.output_folder, True)
@@ -321,7 +338,6 @@ class ImageAnnotator(QWidget):
             self.label_text += chr(key)
             self.number_display.setText(self.label_text)
         elif key == Qt.Key_Minus:
-            # If a minus is pressed and label already equals "-", then set to "unsuitable"
             if self.label_text == "-":
                 self.label_text = "unsuitable"
                 self.number_display.setText("unsuitable")
