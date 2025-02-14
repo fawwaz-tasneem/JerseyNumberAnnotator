@@ -40,12 +40,13 @@ class ImageAnnotator(QWidget):
         self.setGeometry(200, 100, 1000, 700)
         self.setStyleSheet("background-color: #2C2F33; color: #FFFFFF;")
 
-        # Image display area
+        # Image display area (fixed 500x500)
         self.image_label = QLabel("No Image Loaded")
         self.image_label.setFixedSize(500, 500)
+        self.image_label.setAlignment(Qt.AlignCenter)
         self.image_label.setStyleSheet("border: 2px solid #7289DA; padding: 5px;")
-        
-        # New: Image name display label
+
+        # Image name display label
         self.image_name_label = QLabel("No Image Loaded")
         self.image_name_label.setFont(QFont("Arial", 16))
         self.image_name_label.setAlignment(Qt.AlignCenter)
@@ -90,7 +91,7 @@ class ImageAnnotator(QWidget):
         btn_layout.addWidget(self.next_btn)
 
         layout.addWidget(self.image_label, alignment=Qt.AlignCenter)
-        layout.addWidget(self.image_name_label, alignment=Qt.AlignCenter)  # Display image name
+        layout.addWidget(self.image_name_label, alignment=Qt.AlignCenter)
         layout.addWidget(self.number_display, alignment=Qt.AlignCenter)
         layout.addWidget(self.load_folder_btn, alignment=Qt.AlignCenter)
         layout.addWidget(self.select_output_btn, alignment=Qt.AlignCenter)
@@ -140,7 +141,12 @@ class ImageAnnotator(QWidget):
         image_path = self.image_loader.get_current_image()
         if image_path:
             pixmap = QPixmap(image_path)
-            self.image_label.setPixmap(pixmap.scaled(500, 500, Qt.KeepAspectRatio))
+            if not pixmap.isNull():
+                # Scale image to fit within 500x500 while preserving aspect ratio
+                scaled_pixmap = pixmap.scaled(500, 500, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.image_label.setPixmap(scaled_pixmap)
+            else:
+                self.image_label.setText("Failed to load image")
             # Update the image name display label
             self.image_name_label.setText(os.path.basename(image_path))
         else:
