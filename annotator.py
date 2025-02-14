@@ -8,7 +8,7 @@ try:
     from PyQt5.QtWidgets import (QApplication, QLabel, QPushButton, QFileDialog,
                                  QVBoxLayout, QHBoxLayout, QWidget, QProgressBar,
                                  QFrame, QCheckBox, QSizePolicy, QGridLayout)
-    from PyQt5.QtGui import QPixmap, QFont
+    from PyQt5.QtGui import QPixmap, QFont, QIcon
     from PyQt5.QtCore import Qt
 except ModuleNotFoundError:
     print("Error: PyQt5 is not installed. Please install it using 'pip install PyQt5'")
@@ -43,6 +43,7 @@ class ImageAnnotator(QWidget):
 
     def initUI(self):
         """Sets up the GUI layout and widgets."""
+        self.setWindowIcon(QIcon("assets/icon.png"))
         self.setWindowTitle("Football Jersey Number Annotator")
         self.resize(1200, 800)
         self.setStyleSheet("background-color: #2C2F33; color: #FFFFFF;")
