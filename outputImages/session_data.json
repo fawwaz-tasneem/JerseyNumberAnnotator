@@ -1,27 +1,73 @@
-{
-    "start_time": "2025-02-12 13:57:56",
-    "images_annotated": 5,
-    "output_labels": [
-        {
-            "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_test_00000001.jpg",
-            "label": "10"
-        },
-        {
-            "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_test_00000002.jpg",
-            "label": "36"
-        },
-        {
-            "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_test_00000003.jpg",
-            "label": "91"
-        },
-        {
-            "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_test_00000004.jpg",
-            "label": "27"
-        },
-        {
-            "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_test_00000005.jpg",
-            "label": "54"
-        }
-    ],
-    "end_time": "2025-02-12 13:58:50"
-}
+[
+    {
+        "start_time": "2025-02-15 02:06:23",
+        "images_annotated": 16,
+        "output_labels": [
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000001.jpg",
+                "label": "10"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000002.jpg",
+                "label": "36"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000003.jpg",
+                "label": "91"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000004.jpg",
+                "label": "27"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000005.jpg",
+                "label": "54"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000006.jpg",
+                "label": "17"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000007.jpg",
+                "label": "17"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000008.jpg",
+                "label": "17"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000009.jpg",
+                "label": "unsuitable"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000010.jpg",
+                "label": "unsuitable"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000011.jpg",
+                "label": "17"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000012.jpg",
+                "label": "17"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000013.jpg",
+                "label": "unsuitable"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000014.jpg",
+                "label": "17"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000015.jpg",
+                "label": "17"
+            },
+            {
+                "image": "/home/fawwaz/JerseyImageAnnotator/inputImages/IMG_000016.jpg",
+                "label": "17"
+            }
+        ],
+        "end_time": "2025-02-15 02:07:01"
+    }
+]

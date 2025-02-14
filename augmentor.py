@@ -102,12 +102,33 @@ class Augmentor:
         return cv2.GaussianBlur(img, (ksize, ksize), 0)
 
     def random_crop_resize(self, img):
-        """ Crops a portion of the image and resizes it back. """
+        """Crops a portion of the image and resizes it back."""
         h, w = img.shape[:2]
-        crop_x = random.randint(5, w//6)
-        crop_y = random.randint(5, h//6)
+        # Ensure image is large enough to perform cropping
+        if w < 30 or h < 30:
+            return img
+
+        max_crop_x = w // 6
+        max_crop_y = h // 6
+
+        # If the maximum crop value is too small, skip cropping
+        if max_crop_x <= 5 or max_crop_y <= 5:
+            return img
+
+        try:
+            crop_x = random.randint(5, max_crop_x)
+            crop_y = random.randint(5, max_crop_y)
+        except ValueError:
+            # In case the range is empty, return the original image
+            return img
+
+        # Ensure that after cropping, the region is valid
+        if (w - crop_x) <= crop_x or (h - crop_y) <= crop_y:
+            return img
+
         cropped = img[crop_y:h-crop_y, crop_x:w-crop_x]
         return cv2.resize(cropped, (w, h))
+
 
     def affine_transform(self, img):
         """ Applies affine transformation. """
