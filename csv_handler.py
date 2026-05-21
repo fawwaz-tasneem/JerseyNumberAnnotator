@@ -12,13 +12,18 @@ class CSVHandler:
         Ensures existing annotations are preserved.
         """
         csv_path = os.path.join(output_folder, self.file_name)
-        exists = os.path.isfile(csv_path)
-        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        with open(csv_path, 'a', newline='') as file:
-            writer = csv.writer(file)
-            if not exists:
-                writer.writerow(["image_name", "label", "session_id", "timestamp"])
-            writer.writerow([os.path.basename(image_path), label, session_id, timestamp])
+        try:
+            exists = os.path.isfile(csv_path)
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            with open(csv_path, 'a', newline='') as file:
+                writer = csv.writer(file)
+                if not exists:
+                    writer.writerow(["image_name", "label", "session_id", "timestamp"])
+                writer.writerow([os.path.basename(image_path), label, session_id, timestamp])
+            return True
+        except Exception as e:
+            print(f"Error saving annotation to CSV: {e}")
+            return False
 
     def load_existing_annotations(self, output_folder):
         """
@@ -28,10 +33,13 @@ class CSVHandler:
         csv_path = os.path.join(output_folder, self.file_name)
         annotations = {}
         if os.path.isfile(csv_path):
-            with open(csv_path, 'r') as file:
-                reader = csv.reader(file)
-                next(reader, None)  # Skip header
-                for row in reader:
-                    if len(row) == 4:
-                        annotations[row[0]] = (row[1], row[2], row[3])
+            try:
+                with open(csv_path, 'r') as file:
+                    reader = csv.reader(file)
+                    next(reader, None)  # Skip header
+                    for row in reader:
+                        if len(row) == 4:
+                            annotations[row[0]] = (row[1], row[2], row[3])
+            except Exception as e:
+                print(f"Error reading annotations CSV: {e}")
         return annotations

@@ -14,19 +14,25 @@ class SessionManager:
     def load_history(self):
         """Loads existing session history from the JSON file."""
         if os.path.exists(self.history_file):
-            with open(self.history_file, "r") as f:
-                try:
+            try:
+                with open(self.history_file, "r") as f:
                     self.sessions = json.load(f)
-                except Exception:
-                    self.sessions = []
+            except Exception as e:
+                print(f"Error loading session history: {e}")
+                self.sessions = []
         else:
             self.sessions = []
 
     def add_session(self, session_data):
         """Appends the provided session data to the history and writes it to the file."""
         self.sessions.append(session_data)
-        with open(self.history_file, "w") as f:
-            json.dump(self.sessions, f, indent=4)
+        try:
+            with open(self.history_file, "w") as f:
+                json.dump(self.sessions, f, indent=4)
+            return True
+        except Exception as e:
+            print(f"Error saving session history: {e}")
+            return False
 
     def get_total_suitable(self):
         """Returns the total number of suitable images annotated across all sessions."""

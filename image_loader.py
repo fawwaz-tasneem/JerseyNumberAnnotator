@@ -16,8 +16,13 @@ class ImageLoader:
         self.image_list = sorted([os.path.join(folder, img)
                                   for img in os.listdir(folder)
                                   if img.lower().endswith(('.png', '.jpg', '.jpeg'))])
-        csv_handler = CSVHandler()
-        self.annotations = csv_handler.load_existing_annotations(output_folder)
+        if output_folder:
+            csv_handler = CSVHandler()
+            self.annotations = csv_handler.load_existing_annotations(output_folder)
+        else:
+            self.annotations = {}
+            if parent_widget:
+                QMessageBox.information(parent_widget, "Output Folder", "No output folder selected. Existing annotations will not be loaded until you select an output folder.")
         self.index = self.find_resume_index()
         if self.index > 0:
             QMessageBox.information(parent_widget, "Previous Session Found",

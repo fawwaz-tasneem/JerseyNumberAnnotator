@@ -174,8 +174,11 @@ class ImageAnnotator(QWidget):
         """
         self.session_data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S")
         if self.session_manager:
-            self.session_manager.add_session(self.session_data)
-            QMessageBox.information(self, "Session", "Session saved.")
+            saved = self.session_manager.add_session(self.session_data)
+            if saved:
+                QMessageBox.information(self, "Session", "Session saved.")
+            else:
+                QMessageBox.warning(self, "Session", "Failed to save session history.")
         else:
             QMessageBox.warning(self, "Session", "Session manager is not initialized. Select an output folder first.")
         self.update_session_stats()
@@ -317,7 +320,6 @@ class ImageAnnotator(QWidget):
             QMessageBox.warning(self, "Save Annotation", "No image loaded. Load an image folder first.")
             return
         print(f"Saving annotation for {image_path} in {self.output_folder}")
-        QMessageBox.information(self, "Save Annotation", f"Saving annotation for {os.path.basename(image_path)}")
         saved = self.csv_handler.save_annotation(image_path, label, self.output_folder, self.session_data["session_id"])
         if not saved:
             return

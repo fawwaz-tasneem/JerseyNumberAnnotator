@@ -23,25 +23,34 @@ class Augmentor:
         base_name = os.path.splitext(os.path.basename(image_path))[0]
         if augmented_mode:
             original_aug_path = os.path.join(output_folder, f"{base_name}_aug0.jpg")
-            if cv2.imwrite(original_aug_path, img):
-                print(f"Saved original image: {original_aug_path}")
-            else:
-                print(f"Error saving original image: {original_aug_path}")
+            try:
+                if cv2.imwrite(original_aug_path, img):
+                    print(f"Saved original image: {original_aug_path}")
+                else:
+                    print(f"Error saving original image: {original_aug_path}")
+            except Exception as e:
+                print(f"Error saving original image: {e}")
             augmented_images.append(original_aug_path)
             for i in range(1, self.augment_count + 1):
                 aug_img = self.apply_random_transformation(img)
                 aug_path = os.path.join(output_folder, f"{base_name}_aug{i}.jpg")
-                if cv2.imwrite(aug_path, aug_img):
-                    print(f"Saved augmented image: {aug_path}")
-                else:
-                    print(f"Error saving augmented image: {aug_path}")
+                try:
+                    if cv2.imwrite(aug_path, aug_img):
+                        print(f"Saved augmented image: {aug_path}")
+                    else:
+                        print(f"Error saving augmented image: {aug_path}")
+                except Exception as e:
+                    print(f"Error saving augmented image {aug_path}: {e}")
                 augmented_images.append(aug_path)
         else:
             original_path = os.path.join(output_folder, f"{base_name}.jpg")
-            if cv2.imwrite(original_path, img):
-                print(f"Saved original image (no augmentation): {original_path}")
-            else:
-                print(f"Error saving original image: {original_path}")
+            try:
+                if cv2.imwrite(original_path, img):
+                    print(f"Saved original image (no augmentation): {original_path}")
+                else:
+                    print(f"Error saving original image: {original_path}")
+            except Exception as e:
+                print(f"Error saving original image: {e}")
             augmented_images.append(original_path)
         return augmented_images
 
