@@ -1,170 +1,115 @@
----
+# Jersey Number Annotator
 
-# **Jersey Image Annotator Tool**  
-A powerful **image annotation tool** designed for labeling **football jersey numbers**. It supports **manual annotation** and **automatic augmentation**, making it ideal for training OCR models on jersey numbers.
+A desktop annotation tool for labelling football jersey numbers, built to create training datasets for OCR and jersey-recognition models. Supports manual labelling, automated augmentation, and session-based resume.
 
----
+Originally developed as part of a Bachelor's final-year project on automatic football commentary generation, where it was used to prepare jersey-recognition training data feeding the downstream commentary pipeline.
 
-## **📌 Features**
-✔ **Manual Annotation** – Quickly label jersey numbers using keyboard input.  
-✔ **Augmentation Mode** – Generates **augmented versions** of images for better OCR training.  
-✔ **Session Management** – Saves and **resumes from the last annotated image**.  
-✔ **CSV Export** – Saves labels in a structured CSV format for model training.  
-✔ **Keyboard Shortcuts** – Navigate, label, and save annotations efficiently.  
-✔ **Intuitive UI** – A **modern, dark-themed interface** for easy annotation.
+## Features
 
----
+- **Manual annotation** — type the jersey number on the keyboard, press Enter to save and advance.
+- **Augmentation mode** — generates multiple augmented variants per image (saved as `_aug0`, `_aug1`, ...) to expand the training set.
+- **Session management** — progress is persisted between runs; you can stop at any time and resume from the last annotated image.
+- **CSV export** — labels are written to a structured CSV with image name, label, session ID, and timestamp.
+- **Keyboard-driven workflow** — arrow keys to navigate, number keys to enter labels, Enter to commit, Backspace to correct.
+- **Dark-themed UI** — built with PyQt5 for low-eye-strain extended annotation sessions.
 
-## **📂 Project Structure**
+## Project Structure
+
 ```
-JerseyImageAnnotator/
-│── annotator.py        # Main GUI application
-│── image_loader.py     # Handles loading & navigation of images
-│── csv_handler.py      # Saves annotations in a CSV file
-│── augmentor.py        # Applies augmentation techniques
-│── session_data.json   # Stores session progress (auto-generated)
-│── annotations.csv     # Stores labeled data (auto-generated)
-│── assets/             # Icons, UI assets (optional)
-│── README.md           # Documentation
+JerseyNumberAnnotator/
+├── annotator.py          # Main GUI application (entry point)
+├── image_loader.py       # Loads and navigates the input image set
+├── csv_handler.py        # Writes annotations to CSV
+├── augmentor.py          # Generates augmented image variants
+├── session_manager.py    # Persists and resumes session state
+├── rename_dialog.py      # Dialog for renaming images in-tool
+├── assets/               # Application icons and UI assets
+└── inputImages/          # Preprocessing scripts:
+    ├── resize50Script.py            # Batch-resize images to 50%
+    └── standardRenamingScript.py    # Batch-rename to a standard scheme
 ```
 
----
+## Installation
 
-## **⚙️ Installation**
-### **1️⃣ Install Dependencies**
-Ensure you have Python **3.8+** installed. Then install dependencies:
+Requires Python 3.8 or later.
 
 ```bash
 pip install opencv-python numpy PyQt5
 ```
 
-### **2️⃣ Clone the Repository**
+Clone the repository:
+
 ```bash
-git clone https://github.com/yourusername/JerseyImageAnnotator.git
-cd JerseyImageAnnotator
+git clone https://github.com/fawwaz-tasneem/JerseyNumberAnnotator.git
+cd JerseyNumberAnnotator
 ```
 
-### **3️⃣ Run the Application**
+Run the tool:
+
 ```bash
 python annotator.py
 ```
 
----
+## Usage
 
-## **🎨 User Interface**
-### **🖥️ Main UI Components**
-- **📷 Image Display** – Shows the current image being labeled.
-- **🔢 Number Display** – Shows the currently entered number.
-- **🎛️ Control Buttons** – Navigate, save, and toggle augmentation.
-- **📂 Folder Selection** – Load images & set output directory.
-- **💾 Session Management** – Automatically resumes previous sessions.
+**Load images.** Click *Load Folder* to select a directory of input images. Click *Select Output Folder* to choose where annotations, augmented images, and session data will be written.
 
----
+**Annotate.** Type the jersey number using the number keys (0–9). Press Backspace to correct. Press Enter to save the label and advance to the next image.
 
-## **🛠️ How to Use**
-### **1️⃣ Load Images**
-- Click **📂 Load Folder** to select a directory with images.
-- Click **📁 Select Output Folder** to choose where annotated images and CSV files will be saved.
+**Navigate.** Use the left and right arrow keys to move between images.
 
-### **2️⃣ Label Images**
-- **Type the jersey number** using the keyboard.
-- Press **Enter** to save the label.
+**Augment (optional).** Enable *Augmentation Mode* before saving. Each image will produce the original (suffixed `_aug0`) plus several augmented variants (`_aug1`, `_aug2`, ...). All variants share the same label.
 
-### **3️⃣ Navigate Between Images**
-- **← Left Arrow**: Go to the previous image.
-- **→ Right Arrow**: Go to the next image.
+**Resume.** If a previous session exists in the selected output folder, the tool detects it on startup and resumes from the last annotated image.
 
-### **4️⃣ Augment Images (Optional)**
-- Enable **"Augmentation Mode"** to generate **10+ augmented variations** per image.
-- The original image is saved as `_aug0`, augmented images as `_aug1`, `_aug2`, etc.
+## Keyboard Shortcuts
 
-### **5️⃣ Resume Previous Session**
-- If a previous session exists, a **popup notification** will inform you when resuming.
+| Key            | Action                                  |
+|----------------|-----------------------------------------|
+| Left arrow     | Previous image                          |
+| Right arrow    | Next image                              |
+| 0–9            | Enter digit of the jersey number        |
+| Backspace      | Delete the last digit entered           |
+| Enter          | Save annotation and advance             |
 
----
+## Output
 
-## **🎯 Keyboard Shortcuts**
-| Key | Action |
-|-----|--------|
-| **Left Arrow (←)** | Go to the previous image |
-| **Right Arrow (→)** | Go to the next image |
-| **0-9 Keys** | Enter jersey number |
-| **Backspace** | Delete last digit |
-| **Enter** | Save annotation & move to next image |
+### Annotations CSV (`annotations.csv`)
 
----
+| image_name           | label | session_id      | timestamp           |
+|----------------------|-------|-----------------|---------------------|
+| IMG_0001.jpg         | 10    | 20250215_020223 | 2025-02-15 02:02:36 |
+| IMG_0001_aug1.jpg    | 10    | 20250215_020223 | 2025-02-15 02:02:38 |
 
-## **📜 Output Files**
-### **1️⃣ CSV File (`annotations.csv`)**
-Stores annotations in the format:
+The `session_id` field groups all images annotated in the same run, which is useful when auditing inter-annotator consistency or rolling back a session.
 
-| image_name | label | session_id | timestamp |
-|------------|-------|------------|------------|
-| `IMG_0001.jpg` | `10` | `20240225_1405` | `2024-02-25 14:05:32` |
-| `IMG_0001_aug1.jpg` | `10` | `20240225_1405` | `2024-02-25 14:05:35` |
+### Augmented Images
 
-### **2️⃣ Augmented Images**
-Saved in the **output folder** as:
+Saved alongside the original in the output folder:
+
 ```
-IMG_0001_aug0.jpg  # Original image
-IMG_0001_aug1.jpg  # Augmented version 1
-IMG_0001_aug2.jpg  # Augmented version 2
+IMG_0001_aug0.jpg   # Original
+IMG_0001_aug1.jpg   # Augmented variant 1
+IMG_0001_aug2.jpg   # Augmented variant 2
 ...
 ```
 
-### **3️⃣ Session Data (`session_data.json`)**
-Tracks progress so you can **resume labeling from where you left off**.
+### Session Data (`session_data.json`)
 
----
+Tracks the list of annotated images and per-session statistics so the tool can resume cleanly after a restart.
 
-## **🐞 Troubleshooting**
-### **1️⃣ Images Not Saving?**
-- Ensure the **output folder** is selected.
-- Check for errors in the **terminal log** (run with `python annotator.py`).
-- Manually **set correct folder permissions**:
-  ```bash
-  chmod -R 777 /path/to/output/folder/
-  ```
+## Troubleshooting
 
-### **2️⃣ Augmented Images Not Appearing?**
-- Make sure **"Augmentation Mode"** is **enabled** before saving.
-- Check if `cv2.imwrite()` is failing by looking for **error messages** in the terminal.
+**Images are not being saved.** Confirm that an output folder has been selected, and that the process has write permission to it. Run the tool from a terminal (`python annotator.py`) to inspect any errors printed during save.
 
-### **3️⃣ Resuming a Previous Session Fails?**
-- Ensure `session_data.json` and `annotations.csv` are in the **output folder**.
-- Restart the tool and check for a **popup notification** confirming session resume.
+**Augmented images are not appearing.** Ensure *Augmentation Mode* is enabled before saving. If `cv2.imwrite` fails silently, the underlying error will be printed to the terminal.
 
----
+**Session does not resume.** Make sure `session_data.json` and `annotations.csv` are present in the currently selected output folder. The tool checks for both files on startup and shows a confirmation when a session is restored.
 
-## **👨‍💻 Author & Contributions**
-- **Created by:** *Fawwaz Bin Tasneem, Syed Ali Mehdi Rizvi as a part of our Final Year B.Tech Project*  
-- **Contributions:** Open a pull request on GitHub!  
+## Authors
 
----
+Developed by Fawwaz Bin Tasneem and Syed Ali Mehdi Rizvi as part of a Bachelor's final-year project on automatic football commentary generation at Zakir Husain College of Engineering and Technology, Aligarh Muslim University.
 
-## Future Improvements
+## License
 
-- **Tooltips:**  
-  Add descriptive tooltips to buttons and controls to help users quickly understand their functionality.
-
-- **Undo/Redo Functionality:**  
-  Implement an undo/redo mechanism to allow users to easily correct mistakes during annotation.
-
-- **Customizable Shortcuts:**  
-  Allow users to define and modify keybindings according to their personal workflow preferences.
-
-- **Theme Toggle:**  
-  Provide an option to switch between dark and light modes or even offer customizable color schemes.
-
-- **Auto-Save & Backup:**  
-  Integrate automatic saving and backup features to prevent data loss in case of unexpected closures or errors.
-
-- **Drag-and-Drop Support:**  
-  Enable drag-and-drop functionality for easier loading of images or folders into the application.
-
-- **Real-Time Augmentation Preview:**  
-  Implement a preview panel that shows live augmentation effects on the current image before finalizing the annotation.
-## **📜 License**
-This project is **open-source** under the **MIT License**.
-
----
+Released under the MIT License. See [LICENSE](LICENSE) for the full text.
