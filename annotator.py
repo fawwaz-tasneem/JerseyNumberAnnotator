@@ -19,6 +19,7 @@ from csv_handler import CSVHandler
 from augmentor import Augmentor
 from rename_dialog import RenameDialog  # For renaming images
 from session_manager import SessionManager  # For session saving/resuming
+from PyQt5.QtWidgets import QMessageBox
 
 class ImageAnnotator(QWidget):
     def __init__(self):
@@ -174,9 +175,9 @@ class ImageAnnotator(QWidget):
         self.session_data["end_time"] = time.strftime("%Y-%m-%d %H:%M:%S")
         if self.session_manager:
             self.session_manager.add_session(self.session_data)
-            print("Session saved.")
+            QMessageBox.information(self, "Session", "Session saved.")
         else:
-            print("Session manager not initialized.")
+            QMessageBox.warning(self, "Session", "Session manager is not initialized. Select an output folder first.")
         self.update_session_stats()
         self.close()
 
@@ -186,7 +187,7 @@ class ImageAnnotator(QWidget):
         Initializes a new session with previous total suitable images carried over.
         """
         if not self.session_manager:
-            print("Session manager not initialized.")
+            QMessageBox.warning(self, "Resume Session", "Session manager is not initialized. Select an output folder first.")
             return
         if self.session_manager.sessions:
             prev_total = self.session_manager.get_total_suitable()
@@ -202,7 +203,7 @@ class ImageAnnotator(QWidget):
                 self.show_image()
             self.update_session_stats()
         else:
-            print("No previous session found. Starting a new session.")
+            QMessageBox.information(self, "Session", "No previous session found. Starting a new session.")
             self.session_data = {
                 "session_id": time.strftime("%Y%m%d_%H%M%S"),
                 "start_time": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -226,21 +227,21 @@ class ImageAnnotator(QWidget):
         folder = QFileDialog.getExistingDirectory(self, "Select Output Folder")
         if folder:
             self.output_folder = folder
-            print(f"Output folder set to: {self.output_folder}")
+            QMessageBox.information(self, "Output Folder", f"Output folder set to:\n{self.output_folder}")
             self.session_manager = SessionManager(os.path.join(self.output_folder, "session_history.json"))
             self.update_session_stats()
 
     def rename_images(self):
         """Opens a dialog for renaming input images and refreshes the image list."""
         if not self.input_folder:
-            print("Error: Input folder not set.")
+            QMessageBox.warning(self, "Rename Images", "Input folder is not set. Load an image folder first.")
             return
         from rename_dialog import RenameDialog
         dialog = RenameDialog(self.input_folder, self)
         if dialog.exec_() == dialog.Accepted:
             prefix, start_number = dialog.getValues()
             if not prefix or not start_number.isdigit():
-                print("Error: Invalid prefix or starting number.")
+                QMessageBox.warning(self, "Rename Images", "Invalid prefix or starting number.")
                 return
             start_number = int(start_number)
             self.perform_rename(self.input_folder, prefix, start_number)
@@ -263,7 +264,7 @@ class ImageAnnotator(QWidget):
                 os.rename(old_path, new_path)
                 print(f"Renamed {old_name} to {new_name}")
             except Exception as e:
-                print(f"Error renaming {old_name}: {e}")
+                QMessageBox.warning(self, "Rename Images", f"Error renaming {old_name}: {e}")
             number += 1
 
     def show_prev_image(self):
@@ -286,8 +287,12 @@ class ImageAnnotator(QWidget):
                 self.image_label.setText("Failed to load image")
             self.image_name_label.setText(os.path.basename(image_path))
         else:
-            self.image_label.setText("No Image Loaded")
-            self.image_name_label.setText("No Image Loaded")
+            if self.image_loader.image_list:
+                self.image_label.setText("All images are already annotated.")
+                self.image_name_label.setText("No more images to label")
+            else:
+                self.image_label.setText("No Image Loaded")
+                self.image_name_label.setText("No Image Loaded")
 
     def save_annotation(self):
         """
@@ -301,15 +306,21 @@ class ImageAnnotator(QWidget):
         label = self.label_text.strip()
         if label == "--":
             label = "unsuitable"
-        if not label or not self.output_folder:
-            print("Error: No label entered or output folder not set.")
+        if not label:
+            QMessageBox.warning(self, "Save Annotation", "No label entered. Type a number or mark the image unsuitable.")
+            return
+        if not self.output_folder:
+            QMessageBox.warning(self, "Save Annotation", "Output folder is not set. Select an output folder before saving annotations.")
             return
         image_path = self.image_loader.get_current_image()
         if not image_path:
-            print("Error: No image loaded.")
+            QMessageBox.warning(self, "Save Annotation", "No image loaded. Load an image folder first.")
             return
         print(f"Saving annotation for {image_path} in {self.output_folder}")
-        self.csv_handler.save_annotation(image_path, label, self.output_folder, self.session_data["session_id"])
+        QMessageBox.information(self, "Save Annotation", f"Saving annotation for {os.path.basename(image_path)}")
+        saved = self.csv_handler.save_annotation(image_path, label, self.output_folder, self.session_data["session_id"])
+        if not saved:
+            return
         self.session_data["images_annotated"] += 1
         if label.lower() != "unsuitable":
             if self.augmented_mode:
