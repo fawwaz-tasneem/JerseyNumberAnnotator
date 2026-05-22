@@ -154,8 +154,8 @@ class ImageAnnotator(QWidget):
             self.setWindowIcon(QIcon("assets/icon.png"))
         except Exception:
             pass
-        self.resize(1300, 840)
-        self.setMinimumSize(960, 640)
+        self.resize(1200, 800)
+        self.setMinimumSize(860, 580)
 
         self.setStyleSheet(f"""
             QWidget {{
@@ -217,6 +217,7 @@ class ImageAnnotator(QWidget):
         self.image_name_label = QLabel("No image loaded")
         self.image_name_label.setAlignment(Qt.AlignCenter)
         self.image_name_label.setStyleSheet(f"color:{MUTED}; font-size:13px;")
+        self.image_name_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         nav.addWidget(self.prev_btn)
         nav.addWidget(self.image_name_label, 1)
         nav.addWidget(self.next_btn)
@@ -244,8 +245,7 @@ class ImageAnnotator(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setMinimumWidth(320)
-        scroll.setMaximumWidth(390)
+        scroll.setFixedWidth(310)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setStyleSheet("background:transparent;")
 
@@ -253,7 +253,7 @@ class ImageAnnotator(QWidget):
         right_inner.setStyleSheet("background:transparent;")
         right = QVBoxLayout(right_inner)
         right.setSpacing(10)
-        right.setContentsMargins(0, 0, 8, 0)
+        right.setContentsMargins(0, 0, 0, 0)
 
         # Card 1 — Annotation input
         ann = QVBoxLayout(); ann.setSpacing(8)
@@ -270,6 +270,7 @@ class ImageAnnotator(QWidget):
 
         hint = QLabel("Type number  ·  Enter to save  ·  ← → to navigate")
         hint.setAlignment(Qt.AlignCenter)
+        hint.setWordWrap(True)
         hint.setStyleSheet(f"color:{MUTED}; font-size:11px; background:transparent; border:none;")
         ann.addWidget(hint)
 

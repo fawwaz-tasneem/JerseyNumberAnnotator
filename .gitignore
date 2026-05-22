@@ -1,3 +1,7 @@
 inputImages/
 outputImages/
 __pycache__/
+
+# Claude Code
+.claude/
+CLAUDE.md
