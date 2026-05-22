@@ -245,7 +245,7 @@ class ImageAnnotator(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setFixedWidth(310)
+        scroll.setMinimumWidth(240)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setStyleSheet("background:transparent;")
 
@@ -366,8 +366,8 @@ class ImageAnnotator(QWidget):
 
         left_w = QWidget()
         left_w.setLayout(left)
-        content.addWidget(left_w, 1)
-        content.addWidget(scroll)
+        content.addWidget(left_w, 3)
+        content.addWidget(scroll, 2)
 
         root = QVBoxLayout(self)
         root.setSpacing(0)
