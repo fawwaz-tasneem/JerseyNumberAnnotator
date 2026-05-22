@@ -43,3 +43,29 @@ class CSVHandler:
             except Exception as e:
                 print(f"Error reading annotations CSV: {e}")
         return annotations
+
+    def remove_annotations_for_image(self, output_folder, base_stem):
+        """
+        Removes all CSV rows for a given image stem (original + any _aug variants).
+        Returns True if the file was rewritten successfully.
+        """
+        csv_path = os.path.join(output_folder, self.file_name)
+        if not os.path.isfile(csv_path):
+            return False
+        try:
+            with open(csv_path, 'r', newline='') as f:
+                rows = list(csv.reader(f))
+            header = rows[0:1]
+            kept = [
+                row for row in rows[1:]
+                if row and not (
+                    os.path.splitext(row[0])[0] == base_stem
+                    or row[0].startswith(base_stem + "_aug")
+                )
+            ]
+            with open(csv_path, 'w', newline='') as f:
+                csv.writer(f).writerows(header + kept)
+            return True
+        except Exception as e:
+            print(f"Error removing annotations for {base_stem}: {e}")
+            return False
